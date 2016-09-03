@@ -1,0 +1,61 @@
+#!/usr/bin/python
+# bugs to http://github.com/hubt
+
+import os,sys,yaml,subprocess,shlex
+
+def shell(cmd):
+  return subprocess.check_output(shlex.split(cmd))
+
+def set_context(name):
+  cmd = "kubectl config use-context " + name
+  print("Executing command:\n  " + cmd)
+  shell(cmd)
+  
+# passed in parameter, use it as the context to set
+if len(sys.argv) == 2:
+  set_context(sys.argv[1])
+  sys.exit(0)
+
+# otherwise bring up a menu
+  
+config = yaml.load(open(os.environ['HOME'] + "/.kube/config"))
+contexts = config['contexts']
+# sort by cluster/namespace
+no_namespace="<none>"
+contexts.sort(key=lambda c: c['context']['cluster'] + " "+ (c['context']['namespace'] if 'namespace' in c['context'] else no_namespace ))
+i = 1
+context_lines = []
+print("{:>8} {:>2}  {:<20} {:<20} {:<15} {:<15}".format("CURRENT","","CONTEXT","CLUSTER","NAMESPACE","USER")) 
+for x in contexts:
+  current = ""
+  if 'namespace' in x['context']:
+    ns = x['context']['namespace']
+  else: 
+    ns = no_namespace
+  if x['name'] == config['current-context']:
+    current = "--->"
+  line = "{:>8} {:>2}) {:<20} {:<20} {:<15} {:<15}".format(current,i,x['name'],x['context']['cluster'], ns,x['context']['user'])
+  print(line)
+  context_lines.append(line) 
+  i += 1
+print("Current context: " + config['current-context'])
+
+print("Set Context (1-{0} or name): ".format(i-1))
+new_context = sys.stdin.readline()[0:-1]
+if new_context.strip() == '':
+  print("No change")
+  sys.exit(0)
+context_list = filter(lambda c: c['name'] == new_context, contexts)
+if len(context_list) > 0:
+  context_name = context_list[0]['name']
+  print("Setting context to {0}".format(context_name))
+else:
+  c = int(new_context) - 1
+  if c < 0 or c > len(contexts) - 1:
+    print("Context {} out of range".format(new_context))
+    sys.exit(1)
+  context_name = contexts[c]
+  context_name = contexts[c]['name'] 
+  print("Setting context to {0}".format(context_lines[c]))
+set_context(context_name)  
+
