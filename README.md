@@ -2,7 +2,22 @@
 
 This is a random collection of questions and answers I've collected about running and operating kubernetes clusters(primarily AWS). New questions and answers are welcome.
 
-Basic questions:
+Architecture:
+
+What happens when a master fails? What happens when a worker fails?
+
+Kubernetes is designed to be resilient to any individual node failure, master or worker. When a master fails the nodes of the cluster will keep operating, but there can be no changes including pod creation or service member changes until the master is available. When a worker fails, the master stops receiving messages from the worker. If the master does not receive status updates from the worker the node will be marked as NotReady. If a node is NotReady for 5 minutes, the master reschedules all pods that were running on the dead node to other nodes.
+
+How does DNS work in kubernetes?
+
+There is a DNS server called skydns which runs in a pod in the cluster, in the `kube-system` namespace. That DNS server reads from etcd and can serve up dns entries for kubernetes services to all pods. You can reach any service with the name `<service>.<namespace>.svc.cluster.local`. The resolver automatically searches `<namespace>.svc.cluster.local` dns so that you should be able to call one service to another in the same namespace with just `<service>`.
+
+How do I build a High Availability(HA) cluster?
+
+The only stateful part of a kubernetes cluster is the etcd. The master server runs the controller manager, scheduler, and the API server and can be run as replicas. The controller manager and scheduler in the master servers use a leader election system, so only one process is really controlling the cluster at any time. So an HA cluster generally consists of an etcd cluster of 3+ nodes and multiple master nodes. http://kubernetes.io/docs/admin/high-availability/#master-elected-components
+
+
+Basic usage questions:
 
 Should I use Replication Controllers? 
 
@@ -11,24 +26,20 @@ Probably not, they are older and have fewer features than the newer deployment o
 How do I determine the status of a deployment?
 
 What is a DaemonSet?
-It's a set of pods that is run only once on a host. It's used for host-layer features, for instance a network, host monitoring or storage plugin.
+A DaemonSet is a set of pods that is run only once on a host. It's used for host-layer features, for instance a network, host monitoring or storage plugin.
 
 What is a PetSet?
-In a regular deployment all the instances of a pod are exactly the same, they are indistinguishable and are thus sometimes referred to as "cattle", these are typically ephemeral and stateless applications. In a PetSet, each pod is unique and has an identity that needs to be maintained. This is commonly used for more stateful applications like databases.
+In a regular deployment all the instances of a pod are exactly the same, they are indistinguishable and are thus sometimes referred to as "cattle", these are typically stateless applications that can be easily scaled up and down. In a PetSet, each pod is unique and has an identity that needs to be maintained. This is commonly used for more stateful applications like databases.
 
 How does a kubernetes service work?
 
-Within the cluster, most kubernetes services are implemented as a virtual IP called a ClusterIP. A ClusterIP has a list of pods which are in the service, the client sends IP traffic directly to a randomly selected pod in the service, so the ClusterIP isn't actually directly routable even from kubernetes nodes. This is all done with iptables routes and managed by the kube-proxy on each node. So only nodes running kube-proxy can talk to ClusterIP members. The live members of the cluster are stored in an API object called an `endpoint`. You can see the members of a service by doing a `kubectl get endpoints <service>`
+Within the cluster, most kubernetes services are implemented as a virtual IP called a ClusterIP. A ClusterIP has a list of pods which are in the service, the client sends IP traffic directly to a randomly selected pod in the service, so the ClusterIP isn't actually directly routable even from kubernetes nodes. This is all done with iptables routes and managed by the kube-proxy on each node. So only nodes running kube-proxy can talk to ClusterIP members. An alternative to the ClusterIP is to use a "Headless" service by specifying ClusterIP=None, this does not use a virtual IP, but instead just creates a DNS A record for a service that includes all the IP addresses of the pods. The live members of the cluster are stored in an API object called an `endpoint`. You can see the members of a service by doing a `kubectl get endpoints <service>`
 
 How do I expose a service to a host outside the cluster?
 
 There are two ways, use the NodePort or LoadBalancer service type.
 1: NodePort. This makes every node in the cluster listen on the specified NodePort, then any node will forward traffic from that NodePort to a random pod in the service.
 1: LoadBalancer. This provisions a NodePort as above, but then does an additional step to provision an AWS ELB automatically, it also modifies the Auto-Scaling Group of the cluster so that it automatically attaches all members of the ASG to that ELB.
-
-How does DNS work in kubernetes?
-
-There is a DNS server called skydns which runs in a pod in the cluster, in the `kube-system` namespace. That DNS server reads from etcd and can serve up dns entries for kubernetes services to all pods. You can reach any service with the name `<service>.<namespace>.svc.cluster.local`. The resolver automatically searches `<namespace>.svc.cluster.local` dns so that you should be able to call one service to another in the same namespace with just `<service>`.
 
 How do I force a pod to run on a specific node?
 
@@ -41,21 +52,17 @@ Kubernetes by default does attempt node anti-affinity, but it is not a hard requ
 
 How can I get the host IP address from inside a pod?
 
-You can call the kubernetes api with the appropriate credentials, find the correct api object and extract the hostIP from the output with this convoluted shell command that derives the namespace from the /etc/resolv.conf and gets the pod name from `hostname`:
+You can call the kubernetes API with the appropriate credentials, find the correct API object and extract the hostIP from the output with this convoluted shell command that derives the namespace from the /etc/resolv.conf and gets the pod name from `hostname`:
 ```
 curl -sSk  -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$(grep svc.cluster.local /etc/resolv.conf | sed -e 's/search //' -e 's/.svc.cluster.local.*//')/pods/$(hostname) | grep hostIP | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
 ```
 The above solution is a "works for me and will probably work for some other people, but could easily fail for a variety of reasons"
 
-In AWS specifically, I find it easier to use the AWS metadata api and just `curl 169.254.169.254/1.0/meta-data/local-ipv4`
+In AWS specifically, I find it easier to use the AWS metadata API and just `curl 169.254.169.254/1.0/meta-data/local-ipv4`
 
 How do I access the kubenernetes API from within a pod?
 
 See the above answer on "getting the host IP address from inside a pod" for an example of using the API inside a pod
-
-How do I build a High Availability(HA) cluster?
-
-The only stateful part of a kubernetes cluster is the etcd. The master server runs the controller manager, scheduler, and the api server and can be run as replicas. The controller manager and scheduler in the master servers use a leader election system , so only one process is really controlling the cluster at any time. So an HA cluster generally consists of an etcd cluster of at least 3 nodes and multiple master nodes. http://kubernetes.io/docs/admin/high-availability/#master-elected-components
 
 Can pods mount NFS volumes?
 
