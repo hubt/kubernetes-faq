@@ -24,6 +24,8 @@ Probably not, they are older and have fewer features than the newer deployment o
 
 ## How do I determine the status of a deployment?
 
+Use `kubectl get deployment <deployment>`. If the `DESIRED`, `CURRENT`, `UP-TO-DATE` are all equal, then the deployment has completed.
+
 ## What is a DaemonSet?
 
 A DaemonSet is a set of pods that is run only once on a host. It's used for host-layer features, for instance a network, host monitoring or storage plugin.
