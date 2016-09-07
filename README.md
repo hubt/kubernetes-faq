@@ -6,7 +6,7 @@ This is a random collection of questions and answers I've collected about runnin
 
 ## What happens when a master fails? What happens when a worker fails?
 
-Kubernetes is designed to be resilient to any individual node failure, master or worker. When a master fails the nodes of the cluster will keep operating, but there can be no changes including pod creation or service member changes until the master is available. When a worker fails, the master stops receiving messages from the worker. If the master does not receive status updates from the worker the node will be marked as NotReady. If a node is NotReady for 5 minutes, the master reschedules all pods that were running on the dead node to other nodes.
+Kubernetes is designed to be resilient to any individual node failure, master or worker. When a master fails the nodes of the cluster will keep operating, but there can be no changes including pod creation or service member changes until the master is available. When a worker fails, the master stops receiving messages from the worker. If the master does not receive status updates from the worker the node will be marked as NotReady. If a node is NotReady for 5 minutes, the master reschedules all pods that were running on the dead node to other available nodes.
 
 ## How does DNS work in kubernetes?
 
@@ -14,7 +14,7 @@ There is a DNS server called skydns which runs in a pod in the cluster, in the `
 
 ## How do I build a High Availability(HA) cluster?
 
-The only stateful part of a kubernetes cluster is the etcd. The master server runs the controller manager, scheduler, and the API server and can be run as replicas. The controller manager and scheduler in the master servers use a leader election system, so only one process is really controlling the cluster at any time. So an HA cluster generally consists of an etcd cluster of 3+ nodes and multiple master nodes. http://kubernetes.io/docs/admin/high-availability/#master-elected-components
+The only stateful part of a kubernetes cluster is the etcd. The master server runs the controller manager, scheduler, and the API server and can be run as replicas. The controller manager and scheduler in the master servers use a leader election system, so only one controller manager and scheduler is active for the cluster at any time. So an HA cluster generally consists of an etcd cluster of 3+ nodes and multiple master nodes. http://kubernetes.io/docs/admin/high-availability/#master-elected-components
 
 # Basic usage questions:
 
@@ -36,7 +36,7 @@ In a regular deployment all the instances of a pod are exactly the same, they ar
 
 ## How does a kubernetes service work?
 
-Within the cluster, most kubernetes services are implemented as a virtual IP called a ClusterIP. A ClusterIP has a list of pods which are in the service, the client sends IP traffic directly to a randomly selected pod in the service, so the ClusterIP isn't actually directly routable even from kubernetes nodes. This is all done with iptables routes and managed by the kube-proxy on each node. So only nodes running kube-proxy can talk to ClusterIP members. An alternative to the ClusterIP is to use a "Headless" service by specifying ClusterIP=None, this does not use a virtual IP, but instead just creates a DNS A record for a service that includes all the IP addresses of the pods. The live members of the cluster are stored in an API object called an `endpoint`. You can see the members of a service by doing a `kubectl get endpoints <service>`
+Within the cluster, most kubernetes services are implemented as a virtual IP called a ClusterIP. A ClusterIP has a list of pods which are in the service, the client sends IP traffic directly to a randomly selected pod in the service, so the ClusterIP isn't actually directly routable even from kubernetes nodes. This is all done with iptables routes. The iptables configuration is managed by the kube-proxy on each node. So only nodes running kube-proxy can talk to ClusterIP members. An alternative to the ClusterIP is to use a "Headless" service by specifying ClusterIP=None, this does not use a virtual IP, but instead just creates a DNS A record for a service that includes all the IP addresses of the pods. The live members of any service are stored in an API object called an `endpoint`. You can see the members of a service by doing a `kubectl get endpoints <service>`
 
 ## How do I expose a service to a host outside the cluster?
 
@@ -76,7 +76,7 @@ Yes, there's an example here of both an NFS client and server running within pod
 
 ## Is it possible to route traffic from outside the kubernetes cluster directly to pods?
 
-Yes. But one major downside of that is that ClusterIPs are implemented as iptables rules on cluster clients, so you'd lose the ability to see Cluster IPs and service changes. Because the iptables are managed by kube-proxy you could do this by running a kube-proxy, which is similar to just joining the cluster. You could make all your services Headless(ClusterIP = None), this would give your external servers the ability to talk directly to services if they could use the kubernetes dns. Headless services don't use ClusterIPs, but instead just create a DNS A record for all pods in the service. Of course kube-dns is run inside the cluster as a ClusterIP, so there's a separate chicken and egg problem with DNS you would have to deal with.
+Yes. But one major downside of that is that ClusterIPs are implemented as iptables rules on cluster clients, so you'd lose the ability to see Cluster IPs and service changes. Because the iptables are managed by kube-proxy you could do this by running a kube-proxy, which is similar to just joining the cluster. You could make all your services Headless(ClusterIP = None), this would give your external servers the ability to talk directly to services if they could use the kubernetes dns. Headless services don't use ClusterIPs, but instead just create a DNS A record for all pods in the service. kube-dns is run inside the cluster as a ClusterIP, so there's a chicken and egg problem with DNS you would have to deal with.
 
 ## How do I put variables into my pods?
 
@@ -108,7 +108,7 @@ In addition to regular EC2 ip addresses, kubernetes creates its own cluster inte
 
 ## How do I add a node to my AWS kubernetes cluster?
 
-If you used `kube-up.sh` or `kops` to provision your cluster, then it created an AutoScaling Group created automatically. You can re-scale that with kops, or update the ASG directly, to grow/shrink the cluster. New instances are provisioned for you and should join the cluster automatically(my experience has been it takes 5-7 minutes for nodes to join). 
+If you used `kube-up.sh` or `kops` to provision your cluster, then it created an AutoScaling Group automatically. You can re-scale that with kops, or update the ASG directly, to grow/shrink the cluster. New instances are provisioned for you and should join the cluster automatically(my experience has been it takes 5-7 minutes for nodes to join). 
 
 ## How do you make a service create a private ELB in AWS instead of the default public one?
 
@@ -134,7 +134,7 @@ There is a route table entry for every instance in the cluster which allows othe
 
 ## Can you run a multi-AZ kubernetes cluster? What about a multi-region cluster?
 
-Yes and "Not out of the box". Provision with kops and specify the AZ's you want and your cluster will be a multi-AZ cluster within a single region. The AutoScalingGroups can add nodes to any region you specify. The planned solution for a multi-region cluster is to build separate clusters in each region and use federation to manage multiple clusters. http://kubernetes.io/docs/admin/federation/. It is possible to build a multi-region cluster using an overlay network like flannel or weave.
+Yes and "Not out of the box". Provision with kops and specify the AZ's you want and your cluster will be a multi-AZ cluster within a single region. The AutoScalingGroups can add nodes to any region you specify. The planned solution for a multi-region cluster is to build separate clusters in each region and use federation to manage multiple clusters. http://kubernetes.io/docs/admin/federation/. It is also possible to build a multi-region cluster using an overlay network like flannel, calico or weave.
 
 ## Is there a way to update route53 DNS with a service members?
 
