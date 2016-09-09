@@ -45,6 +45,12 @@ There are two ways, use the NodePort or LoadBalancer service type.
 1. NodePort. This makes every node in the cluster listen on the specified NodePort, then any node will forward traffic from that NodePort to a random pod in the service.
 1. LoadBalancer. This provisions a NodePort as above, but then does an additional step to provision a load balancer in your cloud(AWS or GKE) automatically. In AWS it also modifies the Auto-Scaling Group of the cluster so all nodes of that ASG are added to the ELB.
 
+## How does a LoadBalancer service work?
+
+A LoadBalancer by default is set up as a TCP Load Balancer with your cloud provider(AWS or GKE). There is no support in bare metal or OpenStack for Load Balancer types. The kubernetes controller manager provisions a load balancer in your cloud and puts all of your kubernetes nodes into the load balancer. Because each node is assumed to be running `kube-proxy` it should be listening on the appropriate NodePort and then it can forward incoming requests to a pod that is available for the service.
+
+Because the LoadBalancer type is by default TCP, not HTTP many higher level features of a LoadBalancer are not available. For instance health checking from the LoadBalancer to the node is done with a TCP check. HTTP X-Forwarded-For information is not available, though it is possible to use proxy protocol in AWS.
+
 ## How do I force a pod to run on a specific node?
 
 Kubernetes has node affinity which is described here:
@@ -112,6 +118,8 @@ In addition to regular EC2 ip addresses, kubernetes creates its own cluster inte
 
 If you used `kube-up.sh` or `kops` to provision your cluster, then it created an AutoScaling Group automatically. You can re-scale that with kops, or update the ASG directly, to grow/shrink the cluster. New instances are provisioned for you and should join the cluster automatically(my experience has been it takes 5-7 minutes for nodes to join). 
 
+With `kops` the recommended process is to edit the InstanceGroup(ig) and then update your cluster. `kops` also supports multiple instance groups per cluster so you can have multiple Auto Scaling Groups to run multiple types of instances within your cluster. Spot instances are also supported. https://github.com/kubernetes/kops/blob/master/docs/instance_groups.md
+
 ## How do you make a service create a private ELB in AWS instead of the default public one?
 
 Add the following metadata annotation to your LoadBalancer service
@@ -129,6 +137,25 @@ service.beta.kubernetes.io/load-balancer-source-ranges
 Each ELB gets its own security group and this annotation will add those CIDR addresses to the allowed source IPs
 
 https://github.com/kubernetes/kubernetes/blob/d95b9238877d5a74895189069121328c16e420f5/pkg/api/service/annotations.go#L27-L34
+
+## How would I get my ELB LoadBalancer to be an HTTP/s LoadBalancer instead of the default TCP?
+
+Add the following metadata annotations to your service
+```
+service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+```
+or
+```
+service.beta.kubernetes.io/aws-load-balancer-backend-protocol: https
+```
+https://github.com/kubernetes/kubernetes/pull/23495
+
+## How would I attach an SSL certificate to my AWS HTTPS ELB?
+
+Add the following metadata annotations to your service
+```
+service.beta.kubernetes.io/aws-load-balancer-ssl-cert=arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
+```
 
 ## What are some of the AWS limitations?
 
