@@ -56,7 +56,9 @@ Kubernetes by default does attempt node anti-affinity, but it is not a hard requ
 
 ## How can I get the host IP address from inside a pod?
 
-You can call the kubernetes API with the appropriate credentials, find the correct API object and extract the hostIP from the output with this convoluted shell command that derives the namespace from the /etc/resolv.conf and gets the pod name from `hostname`:
+In kubernetes 1.4 the nodename is available in the downward API in the `spec.nodeName` variable. https://github.com/kubernetes/kubernetes/pull/27880/files .
+
+In earlier versions, you can call the kubernetes API with the appropriate credentials, find the correct API object and extract the hostIP from the output with this convoluted shell command that derives the namespace from the /etc/resolv.conf and gets the pod name from `hostname`:
 ```
 curl -sSk  -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
   https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$(grep svc.cluster.local /etc/resolv.conf | sed -e 's/search //' -e 's/.svc.cluster.local.*//')/pods/$(hostname) \
