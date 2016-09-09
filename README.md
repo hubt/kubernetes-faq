@@ -103,6 +103,12 @@ Think of `request` as a node scheduling unit and a `limit` as a hard limit. Kube
 
 Heapster https://github.com/kubernetes/heapster is included and its metrics are how kubernetes measures CPU and memory in order to use horizontal pod autoscaling(hpas). Heapster can be queried directly with its rest API. Prometheus is also more full featured and popular.
 
+## How can containers within a pod communicate with each other?
+
+Containers within a pod share networking space and can reach other on `localhost`. For instance, if you have two containers within a pod, a MySQL container running on port 3306, and a PHP container running on port 80, the PHP container could access the MySQL one through `localhost:3306`.
+
+Read more: https://github.com/kubernetes/kubernetes/blob/release-1.4/docs/design/networking.md#container-to-container
+
 
 # AWS Questions:
 
