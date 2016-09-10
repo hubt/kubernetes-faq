@@ -2,6 +2,75 @@
 
 This is a random collection of questions and answers I've collected about running and operating kubernetes clusters(primarily AWS). New questions and answers are welcome.
 
+#Contents:
+
+[What happens when a master fails? What happens when a worker fails?](#what-happens-when-a-master-fails-what-happens-when-a-worker-fails)
+
+[How does DNS work in kubernetes?](#how-does-dns-work-in-kubernetes)
+
+[How do I build a High Availability(HA) cluster?](#how-do-i-build-a-high-availabilityha-cluster)
+
+[Should I use Replication Controllers?](#should-i-use-replication-controllers)
+
+[How do I determine the status of a deployment?](#how-do-i-determine-the-status-of-a-deployment)
+
+[What is a DaemonSet?](#what-is-a-daemonset)
+
+[What is a PetSet?](#what-is-a-petset)
+
+[How does a kubernetes service work?](#how-does-a-kubernetes-service-work)
+
+[How do I expose a service to a host outside the cluster?](#how-do-i-expose-a-service-to-a-host-outside-the-cluster)
+
+[How do I force a pod to run on a specific node?](#how-do-i-force-a-pod-to-run-on-a-specific-node)
+
+[How do I force replicas of a pod to split across different nodes?](#how-do-i-force-replicas-of-a-pod-to-split-across-different-nodes)
+
+[How can I get the host IP address from inside a pod?](#how-can-i-get-the-host-ip-address-from-inside-a-pod)
+
+[How do I access the kubenernetes API from within a pod?](#how-do-i-access-the-kubenernetes-api-from-within-a-pod)
+
+[Can pods mount NFS volumes?](#can-pods-mount-nfs-volumes)
+
+[Is it possible to route traffic from outside the kubernetes cluster directly to pods?](#is-it-possible-to-route-traffic-from-outside-the-kubernetes-cluster-directly-to-pods)
+
+[How do I put variables into my pods?](#how-do-i-put-variables-into-my-pods)
+
+[Can I use variables or otherwise parameterize my yaml deployment files?](#can-i-use-variables-or-otherwise-parameterize-my-yaml-deployment-files)
+
+[How do CPU and memory requests and limits work?](#how-do-cpu-and-memory-requests-and-limits-work)
+
+[What monitoring and metrics tools do people use for kubernetes?](#what-monitoring-and-metrics-tools-do-people-use-for-kubernetes)
+
+[How should I install kubernetes on AWS?](#how-should-i-install-kubernetes-on-aws)
+
+[How does the default kubernetes AWS networking work?](#how-does-the-default-kubernetes-aws-networking-work)
+
+[How do I add a node to my AWS kubernetes cluster?](#how-do-i-add-a-node-to-my-aws-kubernetes-cluster)
+
+[How do you make a service create a private ELB in AWS instead of the default public one?](#how-do-you-make-a-service-create-a-private-elb-in-aws-instead-of-the-default-public-one)
+
+[How do you restrict an AWS ELB to certain source ips:](#how-do-you-restrict-an-aws-elb-to-certain-source-ips)
+
+[What are some of the AWS limitations?](#what-are-some-of-the-aws-limitations)
+
+[Can you run a multi-AZ kubernetes cluster? What about a multi-region cluster?](#can-you-run-a-multi-az-kubernetes-cluster-what-about-a-multi-region-cluster)
+
+[Is there a way to update route53 DNS with a service members?](#is-there-a-way-to-update-route53-dns-with-a-service-members)
+
+[Can kubernetes auto-create an EBS volume?](#can-kubernetes-auto-create-an-ebs-volume)
+
+[When using an EBS PersistentVolume and PersistentVolumeClaim, how does kubernetes know which AZ to create a pod in?](#when-using-an-ebs-persistentvolume-and-persistentvolumeclaim-how-does-kubernetes-know-which-az-to-create-a-pod-in)
+
+[Does kubernetes support the new Amazon Load Balancer(ALB)?](#does-kubernetes-support-the-new-amazon-load-balanceralb)
+
+[Is there a way to give a pod a separate IAM role that has different permissions than the default instance IAM policy?](#is-there-a-way-to-give-a-pod-a-separate-iam-role-that-has-different-permissions-than-the-default-instance-iam-policy)
+
+[Is kubernetes rack aware or can you detect what region or Availability Zone a host is in?](#is-kubernetes-rack-aware-or-can-you-detect-what-region-or-availability-zone-a-host-is-in)
+
+[Is it possible to install kubernetes into an existing VPC?](#is-it-possible-to-install-kubernetes-into-an-existing-vpc)
+
+
 # Architecture:
 
 ## What happens when a master fails? What happens when a worker fails?
