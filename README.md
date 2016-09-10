@@ -14,9 +14,13 @@ This is a random collection of questions and answers I've collected about runnin
 
 [How do I determine the status of a deployment?](#how-do-i-determine-the-status-of-a-deployment)
 
+[How do I rollback a deployment?](#how-do-i-rollback-a-deployment)
+
 [What is a DaemonSet?](#what-is-a-daemonset)
 
 [What is a PetSet?](#what-is-a-petset)
+
+[What is an Ingress Controller?](#what-is-an-ingress-controller)
 
 [How does a kubernetes service work?](#how-does-a-kubernetes-service-work)
 
@@ -95,13 +99,21 @@ Probably not, they are older and have fewer features than the newer deployment o
 
 Use `kubectl get deployment <deployment>`. If the `DESIRED`, `CURRENT`, `UP-TO-DATE` are all equal, then the deployment has completed.
 
+## How do I rollback a deployment?
+
+If you apply a change to a deployment with the `--record` flag then kubernetes stores the previous deployment in its history. The `kubectl rollout history deployment <deployment>` command will show prior deployments. The last deployment can be restored with the `kubectl rollout undo deployment <deployment>` command. In progress deployments can also be paused and resumed. http://kubernetes.io/docs/user-guide/kubectl/kubectl_rollout/
+
 ## What is a DaemonSet?
 
-A DaemonSet is a set of pods that is run only once on a host. It's used for host-layer features, for instance a network, host monitoring or storage plugin.
+A DaemonSet is a set of pods that is run only once on a host. It's used for host-layer features, for instance a network, host monitoring or storage plugin. http://kubernetes.io/docs/admin/daemons/
 
 ## What is a PetSet?
 
-In a regular deployment all the instances of a pod are exactly the same, they are indistinguishable and are thus sometimes referred to as "cattle", these are typically stateless applications that can be easily scaled up and down. In a PetSet, each pod is unique and has an identity that needs to be maintained. This is commonly used for more stateful applications like databases.
+In a regular deployment all the instances of a pod are exactly the same, they are indistinguishable and are thus sometimes referred to as "cattle", these are typically stateless applications that can be easily scaled up and down. In a PetSet, each pod is unique and has an identity that needs to be maintained. This is commonly used for more stateful applications like databases. http://kubernetes.io/docs/user-guide/petset/
+
+## What is an Ingress Controller?
+
+An Ingress Controller is a pod that can act as an inbound traffic handler. It is a HTTP reverse proxy that is implemented as a somewhat customizable nginx. Among the features are HTTP path and service based routing and SSL termination. http://kubernetes.io/docs/user-guide/ingress/
 
 ## How does a kubernetes service work?
 
@@ -119,6 +131,8 @@ There are two ways, use the NodePort or LoadBalancer service type.
 A LoadBalancer by default is set up as a TCP Load Balancer with your cloud provider(AWS or GKE). There is no support in bare metal or OpenStack for Load Balancer types. The kubernetes controller manager provisions a load balancer in your cloud and puts all of your kubernetes nodes into the load balancer. Because each node is assumed to be running `kube-proxy` it should be listening on the appropriate NodePort and then it can forward incoming requests to a pod that is available for the service.
 
 Because the LoadBalancer type is by default TCP, not HTTP many higher level features of a LoadBalancer are not available. For instance health checking from the LoadBalancer to the node is done with a TCP check. HTTP X-Forwarded-For information is not available, though it is possible to use proxy protocol in AWS.
+
+http://kubernetes.io/docs/user-guide/services/
 
 ## How do I force a pod to run on a specific node?
 
