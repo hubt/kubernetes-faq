@@ -28,6 +28,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [Can I use variables or otherwise parameterize my yaml deployment files?](#can-i-use-variables-or-otherwise-parameterize-my-yaml-deployment-files)
 - [How do CPU and memory requests and limits work?](#how-do-cpu-and-memory-requests-and-limits-work)
 - [What monitoring and metrics tools do people use for Kubernetes?](#what-monitoring-and-metrics-tools-do-people-use-for-kubernetes)
+- [How do I configure credentials to download images from a private docker registry?](#how-do-i-configure-credentials-to-download-images-from-a-private-docker-registry)
 
 [AWS Questions](#aws-questions)
 
@@ -176,6 +177,10 @@ Containers within a pod share networking space and can reach other on `localhost
 
 Learn more: https://github.com/kubernetes/kubernetes/blob/release-1.4/docs/design/networking.md#container-to-container
 
+## How do I configure credentials to download images from a private docker registry?
+
+Creaet a special secret in a your namespace that provides the registry and credentials to authenticate with. Then use that secret in the `spec.imagePullSecrets` field of your pod specification. http://kubernetes.io/docs/user-guide/production-pods/#authenticating-with-a-private-image-registry
+http://kubernetes.io/docs/user-guide/images/#using-a-private-registry
 
 # AWS Questions:
 
