@@ -29,6 +29,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [How do CPU and memory requests and limits work?](#how-do-cpu-and-memory-requests-and-limits-work)
 - [What monitoring and metrics tools do people use for Kubernetes?](#what-monitoring-and-metrics-tools-do-people-use-for-kubernetes)
 - [How do I configure credentials to download images from a private docker registry?](#how-do-i-configure-credentials-to-download-images-from-a-private-docker-registry)
+- [Is it possible to run docker inside a pod?](#is-it-possible-to-run-docker-inside-a-pod)
 
 [AWS Questions](#aws-questions)
 
@@ -179,8 +180,49 @@ Learn more: https://github.com/kubernetes/kubernetes/blob/release-1.4/docs/desig
 
 ## How do I configure credentials to download images from a private docker registry?
 
-Creaet a special secret in a your namespace that provides the registry and credentials to authenticate with. Then use that secret in the `spec.imagePullSecrets` field of your pod specification. http://kubernetes.io/docs/user-guide/production-pods/#authenticating-with-a-private-image-registry
+Create a special secret in a your namespace that provides the registry and credentials to authenticate with. Then use that secret in the `spec.imagePullSecrets` field of your pod specification. http://kubernetes.io/docs/user-guide/production-pods/#authenticating-with-a-private-image-registry
 http://kubernetes.io/docs/user-guide/images/#using-a-private-registry
+
+## Is it possible to run docker inside a pod?
+
+Yes. The two tricks are:
+
+Your pod must run in privileged mode. kubelet must run with `--allow-privileged=true`(this is the default) and the pod must run with `securityContext.privileged: true`. This will allow your pod to mount the host docker socket directly.  
+
+You must mount the host docker socket by specifying `volumes.hostPath.path: /var/run/docker.sock` in your pod spec. 
+
+Here is a simple alpine docker deployment which can run docker commands:
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: docker
+  name: docker
+spec:
+  template:
+    metadata:
+      labels:
+        app: docker
+    spec:
+      containers:
+      - command: ["/bin/sleep","365d"]
+        image: hubt/alpine-docker
+        imagePullPolicy: Always
+        name: docker
+        securityContext:
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-socket
+      imagePullSecrets:
+      - name: registrypullsecret
+      volumes:
+      - hostPath:
+          path: /var/run/docker.sock
+        name: docker-socket
+```
 
 # AWS Questions:
 
