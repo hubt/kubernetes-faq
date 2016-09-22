@@ -27,6 +27,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [How do I put variables into my pods?](#how-do-i-put-variables-into-my-pods)
 - [Can I use variables or otherwise parameterize my yaml deployment files?](#can-i-use-variables-or-otherwise-parameterize-my-yaml-deployment-files)
 - [How do CPU and memory requests and limits work?](#how-do-cpu-and-memory-requests-and-limits-work)
+- [Why is my pod pending?](#why-is-my-pod-pending)
 - [What monitoring and metrics tools do people use for Kubernetes?](#what-monitoring-and-metrics-tools-do-people-use-for-kubernetes)
 - [How do I configure credentials to download images from a private docker registry?](#how-do-i-configure-credentials-to-download-images-from-a-private-docker-registry)
 - [Is it possible to run docker inside a pod?](#is-it-possible-to-run-docker-inside-a-pod)
@@ -166,7 +167,14 @@ There is no built in functionality for this. [Helm](https://github.com/kubernete
 
 ## How do CPU and memory requests and limits work?
 
-Think of `request` as a node scheduling unit and a `limit` as a hard limit. Kubernetes will attempt to schedule your pods onto nodes based on the sum of the existing requests on the node plus the new pod request. Then setting a limit enforces that cap and makes sure that a pod does not exceed the limit on a node. For simplicity you can just set request and limit to be the same, but you won't be able to pack things tightly onto a node for efficiency. The converse problem is if you use limits which are much larger than requests, there is a danger that pods use resources all the way up to their limit and overrun the node or other pods on the node. CPU may not hard-capped depending on the version of Kubernetes/Docker, but memory is. Pods exceeding their memory limit will be terminated and rescheduled.
+Think of `request` as a node scheduling unit and a `limit` as a hard limit when it is already running. Kubernetes will attempt to schedule your pods onto nodes based only on the sum of the existing requests on the node plus the new pod request. A request is only used for scheduling which node a pod runs on. A limit is monitored after a pod has been scheduled and is running. Setting a limit enforces a cap and ensures that a pod does not exceed the limit on a node, killing it does.
+
+For simplicity you can just set request and limit to be the same, but you won't be able to pack things tightly onto a node for efficiency. The converse problem is when you set limits which are much larger than requests there is a danger that pods use resources all the way up to their limit and overrun the node or starve other pods on the node. CPU may not hard-capped depending on the version of Kubernetes/Docker, but memory is. Pods exceeding their memory limit will be terminated and rescheduled.
+
+## Why is my pod pending?
+
+Pending usually means that a pod cannot be scheduled, because of a resource limitation, most commonly the cluster can't find a node which has the available CPU and memory requests to satisfy the scheduler. `kubectl describe pod <podid>` will show the reason why the pod can't be scheduled. Pods can remain in the Pending state indefinitely until the resources are available or until you reduce the number of required replicas.
+
 
 ## What monitoring and metrics tools do people use for Kubernetes?
 
