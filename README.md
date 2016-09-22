@@ -13,6 +13,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [Should I use Replication Controllers?](#should-i-use-replication-controllers)
 - [How do I determine the status of a Deployment?](#how-do-i-determine-the-status-of-a-deployment)
 - [How do I rollback a Deployment?](#how-do-i-rollback-a-deployment)
+- [How do I debug a CrashLoopBackoff?](#how-do-i-debug-a-crashloopbackoff)
 - [What is a DaemonSet?](#what-is-a-daemonset)
 - [What is a PetSet?](#what-is-a-petset)
 - [What is an Ingress Controller?](#what-is-an-ingress-controller)
@@ -28,6 +29,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [Can I use variables or otherwise parameterize my yaml deployment files?](#can-i-use-variables-or-otherwise-parameterize-my-yaml-deployment-files)
 - [How do CPU and memory requests and limits work?](#how-do-cpu-and-memory-requests-and-limits-work)
 - [Why is my pod pending?](#why-is-my-pod-pending)
+- [Why is my terminal screwed up?](#why-is-my-terminal-screwed-up)
 - [What monitoring and metrics tools do people use for Kubernetes?](#what-monitoring-and-metrics-tools-do-people-use-for-kubernetes)
 - [How do I configure credentials to download images from a private docker registry?](#how-do-i-configure-credentials-to-download-images-from-a-private-docker-registry)
 - [Is it possible to run docker inside a pod?](#is-it-possible-to-run-docker-inside-a-pod)
@@ -75,6 +77,10 @@ Probably not, they are older and have fewer features than the newer Deployment o
 ## How do I determine the status of a Deployment?
 
 Use `kubectl get deployment <deployment>`. If the `DESIRED`, `CURRENT`, `UP-TO-DATE` are all equal, then the Deployment has completed.
+
+## How do I debug a CrashLoopBackoff?
+
+This is the standard error message when a pod fails with an error. `kubectl describe pod <podid>` usually doesn't provide much helpful information, but `kubectl logs <podid>` would show the stdout from the pod during the most recent execution attempt. Another helpful technique is to change the `spec.containers.command` for your pod to `bash -c '<command> || sleep 10d'`. This will start your container and then if it exits with a non-zero error code it will sleep for 10 days. This will enable you then use `kubectl exec -it <podid> -- bash` to enter a shell in the container while it is still running but after the main command has crashed.
 
 ## How do I rollback a Deployment?
 
@@ -175,6 +181,11 @@ For simplicity you can just set request and limit to be the same, but you won't 
 
 Pending usually means that a pod cannot be scheduled, because of a resource limitation, most commonly the cluster can't find a node which has the available CPU and memory requests to satisfy the scheduler. `kubectl describe pod <podid>` will show the reason why the pod can't be scheduled. Pods can remain in the Pending state indefinitely until the resources are available or until you reduce the number of required replicas.
 
+## Why is my terminal screwed up?
+
+There's an issue with the kubernetes client not handling terminals correctly. I have a script that I use that solves most of these problems. https://github.com/hubt/kubernetes-faq/tree/master/kshell
+
+https://github.com/kubernetes/kubernetes/issues/13585
 
 ## What monitoring and metrics tools do people use for Kubernetes?
 
