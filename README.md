@@ -40,7 +40,9 @@ This is a random collection of questions and answers I've collected about runnin
 - [How does the default Kubernetes AWS networking work?](#how-does-the-default-kubernetes-aws-networking-work)
 - [How do I add a node to my AWS Kubernetes cluster?](#how-do-i-add-a-node-to-my-aws-kubernetes-cluster)
 - [How do you make a Service create a private ELB in AWS instead of the default public one?](#how-do-you-make-a-service-create-a-private-elb-in-aws-instead-of-the-default-public-one)
-- [How do you restrict an AWS ELB to certain source IPs:](#how-do-you-restrict-an-aws-elb-to-certain-source-ips)
+- [How do you restrict an AWS ELB to certain source IPs?](#how-do-you-restrict-an-aws-elb-to-certain-source-ips)
+- [How would I attach an SSL certificate to my AWS HTTPS ELB?](#how-would-i-attach-an-ssl-certificate-to-my-aws-https-elb)
+- [How would I make a service which listens on both HTTP/80 and HTTPS/443?](#how-would-i-make-a-service-which-listens-on-both-http80-and-https443)
 - [What are some of the AWS limitations?](#what-are-some-of-the-aws-limitations)
 - [Can you run a multi-AZ Kubernetes cluster? What about a multi-region cluster?](#can-you-run-a-multi-az-kubernetes-cluster-what-about-a-multi-region-cluster)
 - [Is there a way to update route53 DNS with a service members?](#is-there-a-way-to-update-route53-dns-with-a-service-members)
@@ -297,6 +299,15 @@ Add the following metadata annotations to your service
 ```
 service.beta.kubernetes.io/aws-load-balancer-ssl-cert=arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
 ```
+
+## How would I make a service which listens on both HTTP/80 and HTTPS/443?
+
+Create a service which listens on port 80 and 443, attach an SSL certificate as above. Then add the following metadata annotation to your service
+```
+service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+```
+This tells the ELB that the SSL certificate will only be used for 443 and not 80.
+
 
 ## What are some of the AWS limitations?
 
