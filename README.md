@@ -23,6 +23,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [How do I force replicas of a pod to split across different nodes?](#how-do-i-force-replicas-of-a-pod-to-split-across-different-nodes)
 - [How can I get the host IP address from inside a pod?](#how-can-i-get-the-host-ip-address-from-inside-a-pod)
 - [How do I access the Kubenernetes API from within a pod?](#how-do-i-access-the-kubenernetes-api-from-within-a-pod)
+- [How do I get all the pods on a node?](#how-do-i-get-all-the-pods-on-a-node)
 - [Can pods mount NFS volumes?](#can-pods-mount-nfs-volumes)
 - [Is it possible to route traffic from outside the Kubernetes cluster directly to pods?](#is-it-possible-to-route-traffic-from-outside-the-kubernetes-cluster-directly-to-pods)
 - [How do I put variables into my pods?](#how-do-i-put-variables-into-my-pods)
@@ -129,8 +130,16 @@ Learn more: http://kubernetes.io/docs/user-guide/services/
 
 ## How do I force a pod to run on a specific node?
 
-Kubernetes has node affinity which is described here:
+There are two mechanism for this: taints and node selection.
+
+Kubernetes node selection is described here:
 http://kubernetes.io/docs/user-guide/node-selection/
+
+In kubernetes 1.3 the concept of a `taint` was implemented. A taint is a way of marking a node for a specific purpose. In order to be scheduled onto a tainted node, a pod must "tolerate" the taint.
+
+Use a `taint` to limit the pods that can run on a node, for instance you want to dedicate instances for only a specific kind of pod. On the other hand, use a pod's node selector to limit where a pod can run, for instance if your pod needs specific features on a host like a GPU.
+
+https://github.com/coreos/kubernetes/blob/master/docs/design/taint-toleration-dedicated.md
 
 ## How do I force replicas of a pod to split across different nodes?
 
@@ -155,6 +164,14 @@ In AWS specifically, I find it easier to use the AWS metadata API and just `curl
 ## How do I access the Kubenernetes API from within a pod?
 
 See the above answer on "getting the host IP address from inside a pod" for an example of using the API inside a pod.
+
+## How do I get all the pods on a node?
+
+You can use the following command to get all the pods on a node in kubernetes 1.4
+
+```
+kubectl get po --all-namespaces  -o jsonpath='{range .items[?(@.spec.nodeName =="nodename")]}{.metadata.name}{"\n"}{end}'
+```
 
 ## Can pods mount NFS volumes?
 
