@@ -40,6 +40,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [How should I install Kubernetes on AWS?](#how-should-i-install-kubernetes-on-aws)
 - [How does the default Kubernetes AWS networking work?](#how-does-the-default-kubernetes-aws-networking-work)
 - [How do I add a node to my AWS Kubernetes cluster?](#how-do-i-add-a-node-to-my-aws-kubernetes-cluster)
+- [How do I set up node auto-scaling](#how-do-i-set-up-node-auto-scaling)
 - [How do you make a Service create a private ELB in AWS instead of the default public one?](#how-do-you-make-a-service-create-a-private-elb-in-aws-instead-of-the-default-public-one)
 - [How do you restrict an AWS ELB to certain source IPs?](#how-do-you-restrict-an-aws-elb-to-certain-source-ips)
 - [How would I attach an SSL certificate to my AWS HTTPS ELB?](#how-would-i-attach-an-ssl-certificate-to-my-aws-https-elb)
@@ -277,6 +278,10 @@ In addition to regular EC2 ip addresses, Kubernetes creates its own cluster inte
 If you used `kube-up.sh` or `kops` to provision your cluster, then it created an AutoScaling Group automatically. You can re-scale that with kops, or update the ASG directly, to grow/shrink the cluster. New instances are provisioned for you and should join the cluster automatically (my experience has been it takes 5-7 minutes for nodes to join). 
 
 With `kops` the recommended process is to edit the InstanceGroup (ig) and then update your cluster. `kops` also supports multiple instance groups per cluster so you can have multiple Auto Scaling Groups to run multiple types of instances within your cluster. Spot instances are also supported.
+
+## How do I set up node auto-scaling?
+
+The following project is an autoscaler: https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler
 
 Learn more: https://github.com/kubernetes/kops/blob/master/docs/instance_groups.md
 
