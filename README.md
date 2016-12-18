@@ -8,6 +8,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [What happens when a master fails? What happens when a worker fails?](#what-happens-when-a-master-fails-what-happens-when-a-worker-fails)
 - [How does DNS work in Kubernetes?](#how-does-dns-work-in-kubernetes)
 - [How do I build a High Availability (HA) cluster?](#how-do-i-build-a-high-availability-ha-cluster)
+- [Can I isolate namespaces from each other?](#can-i-isolate-namespaces-from-each-other)
 
 [Basic Usage Questions](#basic-usage-questions)
 - [Should I use Replication Controllers?](#should-i-use-replication-controllers)
@@ -15,13 +16,14 @@ This is a random collection of questions and answers I've collected about runnin
 - [How do I rollback a Deployment?](#how-do-i-rollback-a-deployment)
 - [How do I debug a CrashLoopBackoff?](#how-do-i-debug-a-crashloopbackoff)
 - [What is a DaemonSet?](#what-is-a-daemonset)
-- [What is a PetSet?](#what-is-a-petset)
+- [What is a PetSet or StatefulSet?](#what-is-a-petset-or-statefulset)
 - [What is an Ingress Controller?](#what-is-an-ingress-controller)
 - [How does a Kubernetes Service work?](#how-does-a-kubernetes-service-work)
 - [How do I expose a Service to a host outside the cluster?](#how-do-i-expose-a-service-to-a-host-outside-the-cluster)
 - [How do I force a pod to run on a specific node?](#how-do-i-force-a-pod-to-run-on-a-specific-node)
 - [How do I force replicas of a pod to split across different nodes?](#how-do-i-force-replicas-of-a-pod-to-split-across-different-nodes)
 - [How can I get the host IP address from inside a pod?](#how-can-i-get-the-host-ip-address-from-inside-a-pod)
+- [How do I give individual pods DNS names](#how-do-i-give-individual-pods-dns-names)
 - [How do I access the Kubenernetes API from within a pod?](#how-do-i-access-the-kubenernetes-api-from-within-a-pod)
 - [How do I get all the pods on a node?](#how-do-i-get-all-the-pods-on-a-node)
 - [Can pods mount NFS volumes?](#can-pods-mount-nfs-volumes)
@@ -72,6 +74,11 @@ The only stateful part of a Kubernetes cluster is the etcd. The master server ru
 
 Learn more: http://kubernetes.io/docs/admin/high-availability/#master-elected-components
 
+## Can I isolate namespaces from each other?
+
+Yes, network policies allow you to isolate namespaces at the network layer. Full isolation requires use of an overlay network such as Flannel, Calico, Weave, or Romana. 
+http://kubernetes.io/docs/user-guide/networkpolicies/
+
 # Basic usage questions:
 
 ## Should I use Replication Controllers? 
@@ -98,11 +105,15 @@ A DaemonSet is a set of pods that is run only once on a host. It's used for host
 
 Learn more: http://kubernetes.io/docs/admin/daemons/
 
-## What is a PetSet?
+## What is a PetSet or StatefulSet?
 
 In a regular Deployment all the instances of a pod are exactly the same, they are indistinguishable and are thus sometimes referred to as "cattle", these are typically stateless applications that can be easily scaled up and down. In a PetSet, each pod is unique and has an identity that needs to be maintained. This is commonly used for more stateful applications like databases. 
 
 Learn more: http://kubernetes.io/docs/user-guide/petset/
+
+In 1.5, PetSets have been renamed to Stateful Sets
+
+Learn more: http://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/
 
 ## What is an Ingress Controller?
 
@@ -127,7 +138,7 @@ A LoadBalancer by default is set up as a TCP Load Balancer with your cloud provi
 
 Because the LoadBalancer type is by default TCP, not HTTP many higher level features of a LoadBalancer are not available. For instance health checking from the LoadBalancer to the node is done with a TCP check. HTTP X-Forwarded-For information is not available, though it is possible to use proxy protocol in AWS.
 
-Learn more: http://kubernetes.io/docs/user-guide/services/
+http://kubernetes.io/docs/user-guide/services/
 
 ## How do I force a pod to run on a specific node?
 
@@ -161,6 +172,15 @@ curl -sSk  -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/servic
 The above solution is a "works for me and will probably work for some other people, but could easily fail for a variety of reasons".
 
 In AWS specifically, I find it easier to use the AWS metadata API and just `curl 169.254.169.254/1.0/meta-data/local-ipv4`
+
+## How do I give individual pods DNS names?
+
+In v1.3, add a `subdomain` field to the pod specification, then create a Headless service which has the same name as the `subdomain`, then each pod gets a DNS record for <podname>.<subdomain>.<servicename>.svc.cluster.local
+
+In v1.2, a similar mechanism exists but using annotations.
+
+http://kubernetes.io/docs/admin/dns/#a-records-and-hostname-based-on-pods-hostname-and-subdomain-fields
+
 
 ## How do I access the Kubenernetes API from within a pod?
 
