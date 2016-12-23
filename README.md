@@ -13,6 +13,7 @@ This is a random collection of questions and answers I've collected about runnin
 [Basic Usage Questions](#basic-usage-questions)
 - [Should I use Replication Controllers?](#should-i-use-replication-controllers)
 - [How do I determine the status of a Deployment?](#how-do-i-determine-the-status-of-a-deployment)
+- [How do I update all my pods if the image changed but the tag is the same](#how-do-i-update-all-my-pods-if-the-image-changed-but-the-tag-is-the-same)
 - [How do I rollback a Deployment?](#how-do-i-rollback-a-deployment)
 - [How do I debug a CrashLoopBackoff?](#how-do-i-debug-a-crashloopbackoff)
 - [What is a DaemonSet?](#what-is-a-daemonset)
@@ -88,6 +89,15 @@ Probably not, they are older and have fewer features than the newer Deployment o
 ## How do I determine the status of a Deployment?
 
 Use `kubectl get deployment <deployment>`. If the `DESIRED`, `CURRENT`, `UP-TO-DATE` are all equal, then the Deployment has completed.
+
+## How do I update all my pods if the image changed but the tag is the same
+
+Make sure your `imagePullPolicy` is set to `Always`. That means when a pod is deleted, a new pod will ensure it has the current version of the image. Then refresh all your pods. 
+
+The simplest way to refresh all your pods is to just delete them and they will be recreated with the latest image. This immediately destroys all your pods which will cause a service outage. Do this with `kubectl delete pod -l <name>=<value>` where name and value are the label selectors your deployment uses. 
+
+A better way is to edit your deployment and modify the deployment pod spec to add or change any annotation. This will cause all your pods to be deleted and rescheduled, but this method will also obey your `rollingUpdate` strategy, meaning no downtime assuming your `rollingUpdate` strategy already behaves properly. Setting a timestamp or a version number is convenient, but any change to pod annotations will cause a rolling update. For a deployment named nginx, this can be done with ```PATCH='{"spec":{"template":{"metadata":{"annotations":{"timestamp":"'$(date)'"}}}}}'
+kubectl patch deployment nginx -p "$PATCH"```
 
 ## How do I debug a CrashLoopBackoff?
 
