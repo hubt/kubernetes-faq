@@ -96,8 +96,11 @@ Make sure your `imagePullPolicy` is set to `Always`. That means when a pod is de
 
 The simplest way to refresh all your pods is to just delete them and they will be recreated with the latest image. This immediately destroys all your pods which will cause a service outage. Do this with `kubectl delete pod -l <name>=<value>` where name and value are the label selectors your deployment uses. 
 
-A better way is to edit your deployment and modify the deployment pod spec to add or change any annotation. This will cause all your pods to be deleted and rescheduled, but this method will also obey your `rollingUpdate` strategy, meaning no downtime assuming your `rollingUpdate` strategy already behaves properly. Setting a timestamp or a version number is convenient, but any change to pod annotations will cause a rolling update. For a deployment named nginx, this can be done with ```PATCH='{"spec":{"template":{"metadata":{"annotations":{"timestamp":"'$(date)'"}}}}}'
-kubectl patch deployment nginx -p "$PATCH"```
+A better way is to edit your deployment and modify the deployment pod spec to add or change any annotation. This will cause all your pods to be deleted and rescheduled, but this method will also obey your `rollingUpdate` strategy, meaning no downtime assuming your `rollingUpdate` strategy already behaves properly. Setting a timestamp or a version number is convenient, but any change to pod annotations will cause a rolling update. For a deployment named nginx, this can be done with:
+```
+PATCH='{"spec":{"template":{"metadata":{"annotations":{"timestamp":"'$(date)'"}}}}}'
+kubectl patch deployment nginx -p "$PATCH"
+```
 
 ## How do I debug a CrashLoopBackoff?
 
