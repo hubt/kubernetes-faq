@@ -13,7 +13,7 @@ This is a random collection of questions and answers I've collected about runnin
 [Basic Usage Questions](#basic-usage-questions)
 - [Should I use Replication Controllers?](#should-i-use-replication-controllers)
 - [How do I determine the status of a Deployment?](#how-do-i-determine-the-status-of-a-deployment)
-- [How do I update all my pods if the image changed but the tag is the same](#how-do-i-update-all-my-pods-if-the-image-changed-but-the-tag-is-the-same)
+- [How do I update all my pods if the image changed but the tag is the same?](#how-do-i-update-all-my-pods-if-the-image-changed-but-the-tag-is-the-same)
 - [How do I rollback a Deployment?](#how-do-i-rollback-a-deployment)
 - [How do I debug a CrashLoopBackoff?](#how-do-i-debug-a-crashloopbackoff)
 - [What is a DaemonSet?](#what-is-a-daemonset)
@@ -37,6 +37,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [What monitoring and metrics tools do people use for Kubernetes?](#what-monitoring-and-metrics-tools-do-people-use-for-kubernetes)
 - [How do I configure credentials to download images from a private docker registry?](#how-do-i-configure-credentials-to-download-images-from-a-private-docker-registry)
 - [Is it possible to run docker inside a pod?](#is-it-possible-to-run-docker-inside-a-pod)
+- [What versions of docker are supported?](#what-versions-of-docker-are-supported)
 
 [AWS Questions](#aws-questions)
 
@@ -295,6 +296,13 @@ spec:
           path: /var/run/docker.sock
         name: docker-socket
 ```
+
+## What versions of docker are supported?
+
+With kubernetes 1.5, Docker versions 1.10.3 - 1.12.3 are supported, with some known issues.
+
+https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#external-dependency-version-information
+
 
 # AWS Questions:
 
