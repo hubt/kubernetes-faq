@@ -171,7 +171,9 @@ https://github.com/coreos/kubernetes/blob/master/docs/design/taint-toleration-de
 
 Kubernetes by default does attempt node anti-affinity, but it is not a hard requirement, it is best effort, but will schedule multiple pods on the same node if that is the only way.
 
-Learn more: http://stackoverflow.com/questions/28918056/does-the-kubernetes-scheduler-support-anti-affinity
+Learn more: 
+http://stackoverflow.com/questions/28918056/does-the-kubernetes-scheduler-support-anti-affinity
+http://kubernetes.io/docs/user-guide/node-selection/
 
 ## How can I get the host IP address from inside a pod?
 
