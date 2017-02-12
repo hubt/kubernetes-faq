@@ -58,6 +58,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [Is there a way to give a pod a separate IAM role that has different permissions than the default instance IAM policy?](#is-there-a-way-to-give-a-pod-a-separate-iam-role-that-has-different-permissions-than-the-default-instance-iam-policy)
 - [Is Kubernetes rack aware or can you detect what region or Availability Zone a host is in?](#is-kubernetes-rack-aware-or-can-you-detect-what-region-or-availability-zone-a-host-is-in)
 - [Is it possible to install Kubernetes into an existing VPC?](#is-it-possible-to-install-kubernetes-into-an-existing-vpc)
+- [Is it possible to install Kubernetes into a private VPC?](#is-it-possible-to-install-kubernetes-into-a-private-vpc)
 
 
 # Architecture:
@@ -102,6 +103,9 @@ A better way is to edit your deployment and modify the deployment pod spec to ad
 PATCH='{"spec":{"template":{"metadata":{"annotations":{"timestamp":"'$(date)'"}}}}}'
 kubectl patch deployment nginx -p "$PATCH"
 ```
+
+It is considered bad practice to rely on the `:latest` docker image tag in your deployments, because using `:latest` there is no way to rollback or specify what version of your image to use. It's better to update the deployment with an exact version of the image and use `--record` so that you can use `kubectl rollout undo deployment <deployment>` or other commands to manage rollouts.
+
 
 ## How do I debug a CrashLoopBackoff?
 
@@ -420,4 +424,9 @@ You can use these for AZ awareness or attach your own labels and use the Downwar
 
 ## Is it possible to install Kubernetes into an existing VPC?
 
-With kops, this should be possible. But having more than one Kubernetes cluster in a VPC is not supported.
+With kops, this is possible. But having more than one Kubernetes cluster in a VPC is not supported.
+
+## Is it possible to install Kubernetes into a private VPC?
+
+With kops 1.5, this is possible. There are features like private subnets, NAT Gateways, bastion hosts.
+

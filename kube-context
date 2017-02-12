@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # bugs to http://github.com/hubt
+from __future__ import print_function
 
 import os,sys,yaml,subprocess,shlex
+import argparse
 
 def shell(cmd):
   return subprocess.check_output(shlex.split(cmd))
@@ -11,6 +13,65 @@ def set_context(name):
   print("Executing command:\n  " + cmd)
   shell(cmd)
   
+def create_context():
+  print("Context Name: ",end="")
+  name = sys.stdin.readline().strip()
+  cluster = config['clusters'][prompt([ x['name'] for x in config['clusters']],header="Select Cluster")]['name']
+  print(cluster)
+  print("Namespace: ", end="")
+  namespace = sys.stdin.readline().strip()
+  user = config['users'][prompt([ x['name'] for x in config['users']],header="Select user")]['name']
+  print(user)
+  config['contexts'].append({
+     "name":name,
+     "context": {
+       "cluster": cluster,
+       "namespace": namespace,
+       "user": user
+     }
+  })
+  print(config['contexts'])
+  sys.exit(0)
+
+# given an array of options, prompts the user to select on by name or index. returns selected index or -1
+def prompt(options,header="Select"):
+  if header:
+    print("{:>3}  {}".format("",header))
+  i = 1
+  for o in options:
+    print("{:>3}) {}".format(i,o))
+    i += 1
+  print("Select(1-{}): ".format(i-1))
+  selection = sys.stdin.readline().strip()
+  i = 0
+  for s in options:
+    if selection == s:
+      return i
+    i += 1
+  n = int(selection)
+  if n >= 1 and n <= len(options):
+   return n-1
+  raise BaseException("Unknown selection")
+
+parser = argparse.ArgumentParser(description="""
+  alternate kubernetes configuration manager
+  does not do configuration merging of multiple config files, but is more friendly
+  """)
+parser.add_argument("--create",default=False,action="store_true",help="create a new kubernetes context entry")
+parser.add_argument("--kubeconfig",default=False,nargs=1,help="kubernetes config file to use")
+parser.add_argument("context",default=False,nargs='?',help="kubernetes context to use")
+
+args = parser.parse_args()
+#print(args)
+if args.kubeconfig:
+  config_file = args.kubeconfig
+else:
+  config_file = os.environ['HOME'] + "/.kube/config"
+print("Loading config file: " + config_file)
+config = yaml.load(open(config_file))
+
+if args.create:
+  create_context()
 # passed in parameter, use it as the context to set
 if len(sys.argv) == 2:
   set_context(sys.argv[1])
@@ -18,7 +79,6 @@ if len(sys.argv) == 2:
 
 # otherwise bring up a menu
   
-config = yaml.load(open(os.environ['HOME'] + "/.kube/config"))
 contexts = config['contexts']
 # sort by cluster/namespace
 no_namespace="<none>"
@@ -40,8 +100,8 @@ for x in contexts:
   i += 1
 print("Current context: " + config['current-context'])
 
-print("Set Context (1-{0} or name): ".format(i-1))
-new_context = sys.stdin.readline()[0:-1]
+print("Set Context (1-{0} or name): ".format(i-1),end="")
+new_context = sys.stdin.readline().strip()
 if new_context.strip() == '':
   print("No change")
   sys.exit(0)

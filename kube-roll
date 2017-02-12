@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: $0 <app> "
+  exit 1
+fi
+APP=$1
+
+PATCH='{"spec":{"template":{"metadata":{"annotations":{"timestamp":"'$(date)'"}}}}}'
+kubectl patch deployment $APP -p "$PATCH"
+kubectl rollout status deployment $APP
