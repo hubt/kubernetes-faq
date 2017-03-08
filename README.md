@@ -94,7 +94,7 @@ Use `kubectl get deployment <deployment>`. If the `DESIRED`, `CURRENT`, `UP-TO-D
 
 ## How do I update all my pods if the image changed but the tag is the same
 
-Make sure your `imagePullPolicy` is set to `Always`. That means when a pod is deleted, a new pod will ensure it has the current version of the image. Then refresh all your pods. 
+Make sure your `imagePullPolicy` is set to `Always`(this is the default). That means when a pod is deleted, a new pod will ensure it has the current version of the image. Then refresh all your pods. 
 
 The simplest way to refresh all your pods is to just delete them and they will be recreated with the latest image. This immediately destroys all your pods which will cause a service outage. Do this with `kubectl delete pod -l <name>=<value>` where name and value are the label selectors your deployment uses. 
 
@@ -181,17 +181,11 @@ http://kubernetes.io/docs/user-guide/node-selection/
 
 ## How can I get the host IP address from inside a pod?
 
-In Kubernetes 1.4 the nodename is available in the downward API in the `spec.nodeName` variable. https://github.com/kubernetes/kubernetes/pull/27880/files .
+In Kubernetes 1.4 the nodename is available in the downward API in the `spec.nodeName` variable. 
 
-In earlier versions, you can call the Kubernetes API with the appropriate credentials, find the correct API object and extract the hostIP from the output with this convoluted shell command that derives the namespace from the /etc/resolv.conf and gets the pod name from `hostname`:
-```
-curl -sSk  -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-  https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/$(grep svc.cluster.local /etc/resolv.conf | sed -e 's/search //' -e 's/.svc.cluster.local.*//')/pods/$(hostname) \
-  | grep hostIP | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
-```
-The above solution is a "works for me and will probably work for some other people, but could easily fail for a variety of reasons".
+http://kubernetes.io/docs/user-guide/downward-api/
 
-In AWS specifically, I find it easier to use the AWS metadata API and just `curl 169.254.169.254/1.0/meta-data/local-ipv4`
+In AWS specifically, It may be easier to use the AWS metadata API and just `curl 169.254.169.254/1.0/meta-data/local-ipv4`
 
 ## How do I give individual pods DNS names?
 
