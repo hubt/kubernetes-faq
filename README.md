@@ -138,6 +138,8 @@ Learn more: http://kubernetes.io/docs/tutorials/stateful-application/basic-state
 
 An Ingress Controller is a pod that can act as an inbound traffic handler. It is a HTTP reverse proxy that is implemented as a somewhat customizable nginx. Among the features are HTTP path and service based routing and SSL termination. 
 
+Learn more: http://kubernetes.io/docs/user-guide/ingress/
+
 ## Why do I see 504 errors from my Ingress during deploys?
 
 This occurs due to a race condition during pod deletion between the Ingress and the pod. When a pod is deleted, it can shut down before the Ingress knows to stop sending traffic. So the Ingress may continue to send traffic to a disabled pod.
@@ -148,8 +150,6 @@ https://github.com/kubernetes/kubernetes/issues/43576
 https://github.com/kubernetes/ingress/issues/322
 https://github.com/kubernetes/contrib/issues/1140
 https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods
-
-Learn more: http://kubernetes.io/docs/user-guide/ingress/
 
 ## How does a Kubernetes service work?
 
