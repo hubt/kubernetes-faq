@@ -19,6 +19,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [What is a DaemonSet?](#what-is-a-daemonset)
 - [What is a PetSet or StatefulSet?](#what-is-a-petset-or-statefulset)
 - [What is an Ingress Controller?](#what-is-an-ingress-controller)
+- [Why do I see 504 errors from my Ingress during deploys?](#why-do-i-see-504-errors-from-my-ingress-during-deploys)
 - [How does a Kubernetes Service work?](#how-does-a-kubernetes-service-work)
 - [How do I expose a Service to a host outside the cluster?](#how-do-i-expose-a-service-to-a-host-outside-the-cluster)
 - [How do I force a pod to run on a specific node?](#how-do-i-force-a-pod-to-run-on-a-specific-node)
@@ -136,6 +137,17 @@ Learn more: http://kubernetes.io/docs/tutorials/stateful-application/basic-state
 ## What is an Ingress Controller?
 
 An Ingress Controller is a pod that can act as an inbound traffic handler. It is a HTTP reverse proxy that is implemented as a somewhat customizable nginx. Among the features are HTTP path and service based routing and SSL termination. 
+
+## Why do I see 504 errors from my Ingress during deploys?
+
+This occurs due to a race condition during pod deletion between the Ingress and the pod. When a pod is deleted, it can shut down before the Ingress knows to stop sending traffic. So the Ingress may continue to send traffic to a disabled pod.
+
+The simplest way to avoid this is to prevent the pod from shutting down immediately with a `preStop` hook. Adding in a `preStop` hook to the deployment which does `sleep 5` should delay the pod termination long enough to let the Ingress update and remove the disabled pod from its upstream list.
+
+https://github.com/kubernetes/kubernetes/issues/43576
+https://github.com/kubernetes/ingress/issues/322
+https://github.com/kubernetes/contrib/issues/1140
+https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods
 
 Learn more: http://kubernetes.io/docs/user-guide/ingress/
 
