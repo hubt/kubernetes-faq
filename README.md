@@ -39,6 +39,7 @@ This is a random collection of questions and answers I've collected about runnin
 - [How do I configure credentials to download images from a private docker registry?](#how-do-i-configure-credentials-to-download-images-from-a-private-docker-registry)
 - [Is it possible to run docker inside a pod?](#is-it-possible-to-run-docker-inside-a-pod)
 - [What versions of docker are supported?](#what-versions-of-docker-are-supported)
+- [Why are some of my pods in an Unknown state?](#why-are-some-of-my-pods-in-an-unknown-state)
 
 [AWS Questions](#aws-questions)
 
@@ -314,6 +315,21 @@ spec:
 With kubernetes 1.5, Docker versions 1.10.3 - 1.12.3 are supported, with some known issues.
 
 https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md#external-dependency-version-information
+
+## Why are some of my pods in an Unknown state?
+
+In Kubernetes 1.6, a significant change was made to how the master treats nodes whose state cannot be determined. Pods from the node are put into an `Unknown` state and the master will not attempt to reschedule them.
+
+In Kubernetes 1.5 and earlier, if the node has not sent a heartbeat to the master in 5 minutes, the node is deleted from the masters and the pods are rescheduled automatically.
+
+You can force delete pods with
+```
+kubectl delete pods <pod> --grace-period=0 --force
+```
+https://kubernetes.io/docs/tasks/run-application/force-delete-stateful-set-pod/#force-deletion
+A longer discussion of the reasoning and the change is here:
+https://github.com/kubernetes/community/blob/master/contributors/design-proposals/pod-safety.md
+
 
 
 # AWS Questions:
