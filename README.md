@@ -15,7 +15,9 @@ This is a random collection of questions and answers I've collected about runnin
 - [How do I determine the status of a Deployment?](#how-do-i-determine-the-status-of-a-deployment)
 - [How do I update all my pods if the image changed but the tag is the same?](#how-do-i-update-all-my-pods-if-the-image-changed-but-the-tag-is-the-same)
 - [How do I rollback a Deployment?](#how-do-i-rollback-a-deployment)
-- [How do I debug a CrashLoopBackoff?](#how-do-i-debug-a-crashloopbackoff)
+- [How do I debug a Pending pod?](#how-do-i-debug-a-pending-pod)
+- [How do I debug a CrashLoopBackoff pod?](#how-do-i-debug-a-crashloopbackoff-pod)
+- [How do I debug a ContainerCreating pod?](#how-do-i-debug-a-containercreating-pod)
 - [What is a DaemonSet?](#what-is-a-daemonset)
 - [What is a PetSet or StatefulSet?](#what-is-a-petset-or-statefulset)
 - [What is an Ingress Controller?](#what-is-an-ingress-controller)
@@ -108,20 +110,39 @@ kubectl patch deployment nginx -p "$PATCH"
 
 It is considered bad practice to rely on the `:latest` docker image tag in your deployments, because using `:latest` there is no way to rollback or specify what version of your image to use. It's better to update the deployment with an exact version of the image and use `--record` so that you can use `kubectl rollout undo deployment <deployment>` or other commands to manage rollouts.
 
+## How do I debug a Pending pod?
 
-## How do I debug a CrashLoopBackoff?
+A `Pending` pod is one that cannot be scheduled onto a node.  Doing a `kubectl describe pod <pod>` will usually tell you why. `kubectl logs <pod>` can also be helpful. There are several common reasons for pods stuck in Pending:
 
-This is the standard error message when a pod fails with an error. `kubectl describe pod <podid>` usually doesn't provide much helpful information, but `kubectl logs <podid>` would show the stdout from the pod during the most recent execution attempt. Another helpful technique is to change the `spec.containers.command` for your pod to `bash -c '<command> || sleep 10d'`. This will start your container and then if it exits with a non-zero error code it will sleep for 10 days. This will enable you then use `kubectl exec -it <podid> -- bash` to enter a shell in the container while it is still running but after the main command has crashed.
+** The pod is requesting more resources than are available, a pod has set a `request` for an amount of CPU or memory that is not available anywhere on any node. eg. requesting a 8 CPU cores when all your nodes only have 4 CPU cores. Doing a `kubectl describe node <node>` on each node will also show already requested resources.
+** There are `taint`s that prevent a pod from scheduling on your nodes. 
+** The nodes have been marked unschedulable with `kubectl cordon`
+** There are no `Ready` nodes. `kubectl get nodes` will display the status of all nodes.
+
+## How do I debug a ContainerCreating pod?
+
+A `ContainerCreating` pod is one that has been scheduled on a node, but cannot startup properly. Doing a `kubectl describe pod <pod>` will usually tell you why. Common reasons include:
+
+** Container Networking Interface(CNI) errors are preventing the pod networking from being setup properly. Flannel and weave versions or configuration can sometimes cause this.
+** Volume mounts failures are preventing startup. External volumes like EBS or GCE PD sometimes cannot be properly attached to the node.
+
+
+## How do I debug a CrashLoopBackoff pod?
+
+This is the standard error message when a pod fails with an error. `kubectl describe pod <podid>` usually doesn't provide much helpful information, but `kubectl logs <podid>` would show the stdout from the pod during the most recent execution attempt. Another helpful technique is to change the `spec.containers.command` for your pod to `bash -c '<command> || sleep 10d'`. This will start your container and then if it exits with a non-zero error code it will sleep for 10 days. This will enable you then use `kubectl exec -it <podid> -- bash` to enter a shell in the container while it is still running but after the main command has exited so that you can debug it.
+
 
 ## How do I rollback a Deployment?
 
 If you apply a change to a Deployment with the `--record` flag then Kubernetes stores the previous Deployment in its history. The `kubectl rollout history deployment <deployment>` command will show prior Deployments. The last Deployment can be restored with the `kubectl rollout undo deployment <deployment>` command. In progress Deployments can also be paused and resumed. 
 
+When a new version of a Deployment is applied, a new ReplicaSet object is created which is slowly scaled up while the old ReplicaSet is scaled down. You can look at each ReplicaSet that has been rolled out with `kubectl get replicaset`. Each ReplicaSet is named with the format <deployment>-<pod-template-hash>, so you can also do `kubectl describe replicaset <replicaset>`.
+
 Learn more: http://kubernetes.io/docs/user-guide/kubectl/kubectl_rollout/
 
 ## What is a DaemonSet?
 
-A DaemonSet is a set of pods that is run only once on a host. It's used for host-layer features, for instance a network, host monitoring or storage plugin. 
+A DaemonSet is a set of pods that is run only once on a host. It's used for host-layer features, for instance a network, host monitoring or storage plugin or other things which you would never want to run more than once on a host. 
 
 Learn more: http://kubernetes.io/docs/admin/daemons/
 
