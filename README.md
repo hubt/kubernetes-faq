@@ -131,6 +131,8 @@ A `ContainerCreating` pod is one that has been scheduled on a node, but cannot s
 
 This is the standard error message when a pod fails with an error. `kubectl describe pod <podid>` usually doesn't provide much helpful information, but `kubectl logs <podid>` would show the stdout from the pod during the most recent execution attempt. Another helpful technique is to change the `spec.containers.command` for your pod to `bash -c '<command> || sleep 10d'`. This will start your container and then if it exits with a non-zero error code it will sleep for 10 days. This will enable you then use `kubectl exec -it <podid> -- bash` to enter a shell in the container while it is still running but after the main command has exited so that you can debug it.
 
+Another common reason is that a node is failing its health check and has been killed by Kubernetes. The pod will generally restart itself after some period of time(a backoff time, hence the CrashLoopBackoff), on the same node. A CrashLoopBackoff does not move a pod to a new node.
+
 
 ## How do I rollback a Deployment?
 
@@ -431,7 +433,9 @@ Yes and "Not out of the box". Provision with kops and specify the AZ's you want 
 
 ## Is there a way to update route53 DNS with a service members?
 
-Third party project: https://github.com/wearemolecule/route53-kubernetes
+The new way going forward to do this will be with the external-dns project. https://github.com/kubernetes-incubator/external-dns
+
+Older project with similar functionality: https://github.com/wearemolecule/route53-kubernetes
 Future work in core kops: https://github.com/kubernetes/kops/tree/master/dns-controller
 
 ## Can kubernetes auto-create an EBS volume?
